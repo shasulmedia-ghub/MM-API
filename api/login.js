@@ -45,7 +45,7 @@ module.exports = async (req, res) => {
     const validPassword = await bcrypt.compare(
       password,
 
-      user.password,
+      user.password_hash,
     );
 
     if (!validPassword) {
