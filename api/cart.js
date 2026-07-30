@@ -41,7 +41,8 @@ async function getCart(req, res) {
               ci.quantity,
               ci.unit_price,
               p.product_name,
-              p.description
+              p.description,
+              p.default_image
          FROM cart_items ci
          JOIN products p ON p.id = ci.product_id
         WHERE ci.cart_id = $1
