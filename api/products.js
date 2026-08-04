@@ -7,8 +7,8 @@ const cors = require("./cors");
 // Get all products (optionally filter by ?categoryId=)
 // =======================================================================
 async function getProducts(req, res) {
-  const { categoryId } = req.query;
-
+  const { categoryId } = req.body;
+  console.log(categoryId);
   try {
     const result = categoryId
       ? await pool.query(
