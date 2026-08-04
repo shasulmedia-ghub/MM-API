@@ -133,6 +133,15 @@ async function deleteProduct(req, res) {
   const { id } = req.params;
 
   try {
+    const resultV = await pool.query(
+      'DELETE FROM product_variants WHERE product_id = $1 RETURNING id',
+      [id]
+    );
+
+    if (resultV.rows.length === 0) {
+      return res.status(404).json({ error: 'Product Variants not found' });
+    }
+
     const result = await pool.query(
       'DELETE FROM products WHERE id = $1 RETURNING id',
       [id]
