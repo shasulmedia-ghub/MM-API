@@ -34,4 +34,5 @@ app.post('/api/categories', products.addCategory);
 app.post('/api/product_variants', products.addProductVariant);
 app.put('/api/product_variants/:id', products.updateProductVariant);
 app.delete('/api/product_variants/:id', products.deleteProductVariant);
+
 module.exports = app;
