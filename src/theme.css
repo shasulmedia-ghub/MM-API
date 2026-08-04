@@ -1,0 +1,81 @@
+:root{
+
+    --primary:#E52521;
+
+    --secondary:#FFB000;
+
+    --success:#43B047;
+
+    --info:#049CD8;
+
+    --dark:#222;
+
+    --light:#f8f9fa;
+
+    --border-radius:15px;
+
+    --transition:0.3s;
+
+}
+
+body{
+
+    background:var(--light);
+
+    font-family:'Segoe UI',sans-serif;
+
+}
+
+.card{
+
+    border-radius:var(--border-radius);
+
+    transition:var(--transition);
+
+}
+
+.card:hover{
+
+    transform:translateY(-5px);
+
+}
+
+.btn{
+
+    border-radius:10px;
+
+}
+
+.hero-gradient{
+
+    background:linear-gradient(
+        135deg,
+        var(--primary),
+        var(--secondary)
+    );
+
+}
+
+.page-header{
+
+    background:linear-gradient(
+        90deg,
+        var(--primary),
+        var(--secondary)
+    );
+
+}
+
+.shadow-soft{
+
+    box-shadow:0 10px 30px rgba(0,0,0,.15);
+
+}
+
+.section-title{
+
+    font-weight:700;
+
+    color:var(--primary);
+
+}
