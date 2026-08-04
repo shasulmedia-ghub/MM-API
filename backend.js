@@ -25,7 +25,7 @@ app.delete('/api/cart/items', cart.removeSelectedItems);
 
 
 app.get('/api/products', products.getProducts);
-app.get('/api/products/:categoryId', products.getProductsByCategory);
+app.get('/api/products_category/:categoryId', products.getProductsByCategory);
 app.post('/api/products', products.addProduct);
 app.put('/api/products/:id', products.updateProduct);
 app.delete('/api/products/:id', products.deleteProduct);

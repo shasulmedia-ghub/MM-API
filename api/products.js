@@ -4,8 +4,8 @@ const cors = require("./cors");
 
 
 // =======================================================================
-// GET /api/productsByCategory/:categoryId
-// Get all products by category
+// GET /api/products
+// Get all products
 // =======================================================================
 async function getProducts(req, res) {
 
