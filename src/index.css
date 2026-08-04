@@ -1,0 +1,400 @@
+/* ==========================================================================
+   MarioMart Design Tokens
+   Palette: warm cream backdrop, brand red, deep arcade blue, coin gold, pipe green
+   Type: Baloo 2 (display, rounded/playful) + Inter (body) + JetBrains Mono (labels)
+   Signature: "press-button" 3D buttons with a solid bottom edge that compresses
+   on click/press, echoing an arcade button without borrowing any specific IP.
+   ========================================================================== */
+
+:root {
+  --color-bg: #fff8ed;
+  --color-surface: #ffffff;
+  --color-ink: #1a1a2e;
+  --color-ink-soft: #5a5a72;
+
+  --color-red: #d8322a;
+  --color-red-shadow: #8f1f19;
+  --color-blue: #1b3a6b;
+  --color-blue-shadow: #0f2444;
+  --color-gold: #f2b705;
+  --color-gold-shadow: #b8850a;
+  --color-green: #2e8b57;
+  --color-green-shadow: #1f5f3b;
+
+  --color-border: #e8ddc8;
+
+  --font-display: "Baloo 2", "Trebuchet MS", sans-serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --radius-md: 12px;
+  --radius-lg: 20px;
+
+  --shadow-card: 0 4px 0 var(--color-border), 0 8px 20px rgba(27, 58, 107, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 0.2px;
+}
+
+a {
+  color: inherit;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-blue);
+  font-weight: 500;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-container {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+  width: 100%;
+}
+
+/* ---------------- Navbar ---------------- */
+
+.navbar {
+  background: var(--color-blue);
+  color: #fff;
+  border-bottom: 4px solid var(--color-blue-shadow);
+}
+
+.navbar-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 800;
+  text-decoration: none;
+  color: #fff;
+}
+
+.navbar-brand-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--color-gold);
+  border: 3px solid var(--color-gold-shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--color-blue-shadow);
+  font-size: 1.05rem;
+}
+
+.navbar-links {
+  display: flex;
+  align-items: bottom;
+  gap: 6px;
+  margin-left: 50px;
+}
+
+.navbar-link {
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 600;
+  font-size: 0.92rem;
+  padding: 8px 14px;
+  border-radius: 999px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.navbar-link:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.navbar-link.active {
+  background: var(--color-gold);
+  color: var(--color-blue-shadow);
+}
+
+.navbar-user {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-right: 4px;
+}
+
+/* ---------------- Buttons (signature press-button) ---------------- */
+
+.btn {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 12px 22px;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+  text-decoration: none;
+}
+
+.btn:active {
+  transform: translateY(3px);
+}
+
+.btn-primary {
+  background: var(--color-red);
+  color: #fff;
+  box-shadow: 0 4px 0 var(--color-red-shadow);
+}
+.btn-primary:active {
+  box-shadow: 0 1px 0 var(--color-red-shadow);
+}
+
+.btn-gold {
+  background: var(--color-gold);
+  color: var(--color-blue-shadow);
+  box-shadow: 0 4px 0 var(--color-gold-shadow);
+}
+.btn-gold:active {
+  box-shadow: 0 1px 0 var(--color-gold-shadow);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--color-blue);
+  border: 2px solid var(--color-blue);
+  box-shadow: none;
+}
+.btn-outline:hover {
+  background: var(--color-blue);
+  color: #fff;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ---------------- Cards / surfaces ---------------- */
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 32px;
+}
+
+.auth-card {
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+/* ---------------- Forms ---------------- */
+
+.field {
+  margin-bottom: 18px;
+  text-align: left;
+}
+
+.field label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-ink-soft);
+  margin-bottom: 6px;
+}
+
+.field input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 999px;
+  border: 2px solid var(--color-border);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  background: #fffdf8;
+  transition: border-color 0.15s ease;
+}
+
+.field input:focus {
+  outline: none;
+  border-color: var(--color-blue);
+}
+
+.form-error {
+  background: #fdecea;
+  border: 1px solid var(--color-red);
+  color: var(--color-red-shadow);
+  font-size: 0.85rem;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
+}
+
+.form-footnote {
+  text-align: center;
+  margin-top: 18px;
+  font-size: 0.88rem;
+  color: var(--color-ink-soft);
+}
+
+.form-footnote a {
+  color: var(--color-red);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* ---------------- Home page ---------------- */
+
+.hero {
+  text-align: center;
+  padding: 56px 24px;
+}
+
+.hero h1 {
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  color: var(--color-blue);
+  line-height: 1.1;
+}
+
+.hero .accent {
+  color: var(--color-red);
+}
+
+.hero p {
+  max-width: 520px;
+  margin: 18px auto 30px;
+  color: var(--color-ink-soft);
+  font-size: 1.05rem;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.coin-row {
+  display: flex;
+  justify-content: center;
+  gap: 22px;
+  margin-top: 48px;
+  flex-wrap: wrap;
+}
+
+.coin-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.coin-dot {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--color-gold);
+  border: 3px solid var(--color-gold-shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--color-blue-shadow);
+}
+
+.coin-stat span.label {
+  font-size: 0.78rem;
+  color: var(--color-ink-soft);
+  font-weight: 600;
+}
+
+/* ---------------- Dashboard ---------------- */
+
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.stat-card {
+  border-top: 4px dashed var(--color-gold);
+}
+
+.stat-card .eyebrow {
+  margin-bottom: 10px;
+}
+
+.stat-card .value {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  color: var(--color-blue);
+}
+
+.status-pill {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(46, 139, 87, 0.12);
+  color: var(--color-green-shadow);
+  font-weight: 600;
+}
+
+.center-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--color-ink-soft);
+}
