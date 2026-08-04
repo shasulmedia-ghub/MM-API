@@ -1,5 +1,6 @@
 // product.js
 const pool = require('./db');
+const cors = require("./cors");
 
 // =======================================================================
 // GET /api/products
