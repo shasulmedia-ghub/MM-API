@@ -25,14 +25,17 @@ app.delete('/api/cart/items', cart.removeSelectedItems);
 
 
 app.get('/api/products', products.getProducts);
-app.get('/api/products_category/:categoryId', products.getProductsByCategory);
+app.get('/api/products/category/:categoryId', products.getProductsByCategory);
 app.post('/api/products', products.addProduct);
 app.put('/api/products/:id', products.updateProduct);
 app.delete('/api/products/:id', products.deleteProduct);
+
 app.get('/api/categories', products.getCategories);
 app.post('/api/categories', products.addCategory);
-app.post('/api/product_variants', products.addProductVariant);
-app.put('/api/product_variants/:id', products.updateProductVariant);
-app.delete('/api/product_variants/:id', products.deleteProductVariant);
+
+app.get('/api/products/:productId/variants', products.getProductVariants);
+app.post('/api/variants', products.addProductVariants);
+app.put('/api/variants/:id', products.updateProductVariants);
+app.delete('/api/variants/:id', products.deleteProductVariants);
 
 module.exports = app;

@@ -1,28 +1,26 @@
-// product.js
+// products.js
 const pool = require('../db');
 const cors = require("./cors");
-
 
 // =======================================================================
 // GET /api/products
 // Get all products
 // =======================================================================
 async function getProducts(req, res) {
-
   try {
     const result = await pool.query(
-          `SELECT p.id,
-                  p.category_id,
-                  p.product_name,
-                  p.description,
-                  p.default_image,
-                  p.created_at,
-                  p.updated_at,
-                  c.category_name
-             FROM products p
-             JOIN categories c ON c.id = p.category_id
-            ORDER BY p.id`
-        );
+      `SELECT p.id,
+              p.category_id,
+              p.product_name,
+              p.description,
+              p.default_image,
+              p.created_at,
+              p.updated_at,
+              c.category_name
+         FROM products p
+         JOIN categories c ON c.id = p.category_id
+        ORDER BY p.id`
+    );
 
     res.json(result.rows);
   } catch (err) {
@@ -31,35 +29,34 @@ async function getProducts(req, res) {
   }
 }
 
-
 // =======================================================================
-// GET /api/productsByCategory/:categoryId
-// Get all products by category
+// GET /api/products/category/:categoryId
+// Get all products belonging to a specific category
 // =======================================================================
 async function getProductsByCategory(req, res) {
   const { categoryId } = req.params;
 
   try {
     const result = await pool.query(
-          `SELECT p.id,
-                  p.category_id,
-                  p.product_name,
-                  p.description,
-                  p.default_image,
-                  p.created_at,
-                  p.updated_at,
-                  c.category_name
-             FROM products p
-             JOIN categories c ON c.id = p.category_id
-            WHERE p.category_id = $1
-            ORDER BY p.id`,
-          [categoryId]
-        );
+      `SELECT p.id,
+              p.category_id,
+              p.product_name,
+              p.description,
+              p.default_image,
+              p.created_at,
+              p.updated_at,
+              c.category_name
+         FROM products p
+         JOIN categories c ON c.id = p.category_id
+        WHERE p.category_id = $1
+        ORDER BY p.id`,
+      [categoryId]
+    );
 
     res.json(result.rows);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to fetch products by category' });
+    res.status(500).json({ error: 'Failed to fetch products for this category' });
   }
 }
 
@@ -88,6 +85,9 @@ async function addProduct(req, res) {
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error(err);
+    if (err.code === '23503') {
+      return res.status(409).json({ error: 'categoryId does not reference an existing category' });
+    }
     res.status(500).json({ error: 'Failed to add product' });
   }
 }
@@ -133,16 +133,6 @@ async function deleteProduct(req, res) {
   const { id } = req.params;
 
   try {
-    const resultV = await pool.query(
-      'DELETE FROM product_variants WHERE product_id = $1 RETURNING id',
-      [id]
-    );
-    
-    if (resultV.rows.length === 0) {
-      return res.status(404).json({ error: 'Product Variant not found' });
-    };
-
-    
     const result = await pool.query(
       'DELETE FROM products WHERE id = $1 RETURNING id',
       [id]
@@ -150,13 +140,13 @@ async function deleteProduct(req, res) {
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Product not found' });
-    };
+    }
 
     res.json({ message: 'Product deleted', id: result.rows[0].id });
   } catch (err) {
     console.error(err);
-    // FK constraint (ON DELETE RESTRICT) will trigger if product_image /
-    // product_variants / order_items / cart_items still reference this id
+    // ON DELETE RESTRICT fires if product_image / product_variants /
+    // order_items / cart_items still reference this product
     if (err.code === '23503') {
       return res.status(409).json({
         error: 'Cannot delete product: it is still referenced by other records',
@@ -172,9 +162,7 @@ async function deleteProduct(req, res) {
 // =======================================================================
 async function getCategories(req, res) {
   try {
-    const result = await pool.query(
-      'SELECT * FROM categories ORDER BY id'
-    );
+    const result = await pool.query('SELECT * FROM categories ORDER BY id');
     res.json(result.rows);
   } catch (err) {
     console.error(err);
@@ -214,13 +202,34 @@ async function addCategory(req, res) {
   }
 }
 
+// =======================================================================
+// GET /api/products/:productId/variants
+// Get all variants for a specific product
+// =======================================================================
+async function getProductVariants(req, res) {
+  const { productId } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT * FROM product_variants
+        WHERE product_id = $1
+        ORDER BY id`,
+      [productId]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch product variants' });
+  }
+}
 
 // =======================================================================
 // POST /api/variants
 // Add a new product variant
 // Body: { productId, field, colour, size, unitPrice, stockQuantity, imageUrl, newArrival }
 // =======================================================================
-async function addProductVariant(req, res) {
+async function addProductVariants(req, res) {
   const {
     productId,
     field,
@@ -271,7 +280,7 @@ async function addProductVariant(req, res) {
 // Update an existing product variant
 // Body: any of { field, colour, size, unitPrice, stockQuantity, imageUrl, newArrival }
 // =======================================================================
-async function updateProductVariant(req, res) {
+async function updateProductVariants(req, res) {
   const { id } = req.params;
   const {
     field,
@@ -312,9 +321,9 @@ async function updateProductVariant(req, res) {
 
 // =======================================================================
 // DELETE /api/variants/:id
-// Delete a product variant
+// Delete a product variant by id
 // =======================================================================
-async function deleteProductVariant(req, res) {
+async function deleteProductVariants(req, res) {
   const { id } = req.params;
 
   try {
@@ -340,16 +349,16 @@ async function deleteProductVariant(req, res) {
   }
 }
 
-
-
 module.exports = {
   getProducts,
+  getProductsByCategory,
   addProduct,
   updateProduct,
   deleteProduct,
   getCategories,
   addCategory,
-  addProductVariant,
-  updateProductVariant,
-  deleteProductVariant,
+  getProductVariants,
+  addProductVariants,
+  updateProductVariants,
+  deleteProductVariants,
 };
