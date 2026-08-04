@@ -1,7 +1,7 @@
 // users.js
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const pool = require('./db');
+const pool = require('../db');
 const cors = require("./cors");
 
 const JWT_SECRET = process.env.JWT_SECRET;
