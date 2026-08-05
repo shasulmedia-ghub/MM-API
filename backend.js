@@ -3,6 +3,7 @@ const cors = require("cors");
 const cart = require('./api/cart');
 const products = require('./api/products');
 const users = require('./api/users');
+const orders = require('./api/orders');
 
 const app = express(); 
 
@@ -23,6 +24,12 @@ app.put('/api/cart/:cartId', cart.updateCartItem);
 app.delete('/api/cart/:cartId', cart.removeCartItem);
 app.delete('/api/cart/user/:userId', cart.clearCart);
 app.delete('/api/cart/items', cart.removeSelectedItems);
+
+// Order APIs
+app.post('/api/orders',          orders.createOrder);
+app.get('/api/orders/:orderId',  orders.getOrderById);
+app.put('/api/orders/:orderId',  orders.updateOrder);
+
 
 // Product APIs
 app.get('/api/products', products.getProducts);
