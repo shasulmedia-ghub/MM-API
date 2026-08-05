@@ -216,8 +216,62 @@ async function updateOrder(req, res) {
   }
 }
 
+// =======================================================================
+// GET /api/orders/user/:userId
+// Get all orders for a user, each with its order items + product details
+// =======================================================================
+async function getOrdersByUser(req, res) {
+  const { userId } = req.params;
+
+  try {
+    // Fetch all orders for this user
+    const ordersResult = await pool.query(
+      `SELECT o.id,
+              o.user_id,
+              o.total_amount,
+              o.status,
+              o.shipping_address,
+              o.created_at
+         FROM orders o
+        WHERE o.user_id = $1
+        ORDER BY o.created_at DESC`,
+      [userId]
+    );
+
+    const orders = ordersResult.rows;
+
+    // For each order, fetch its items with product details
+    const ordersWithItems = await Promise.all(
+      orders.map(async (order) => {
+        const itemsResult = await pool.query(
+          `SELECT oi.id,
+                  oi.product_id,
+                  oi.quantity,
+                  oi.unit_price,
+                  oi.colour,
+                  oi.size,
+                  p.product_name,
+                  p.default_image
+             FROM order_items oi
+             JOIN products p ON p.id = oi.product_id
+            WHERE oi.order_id = $1
+            ORDER BY oi.id`,
+          [order.id]
+        );
+        return { ...order, orderItems: itemsResult.rows };
+      })
+    );
+
+    res.json(ordersWithItems);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch orders for user' });
+  }
+}
+
 module.exports = {
   createOrder,
   getOrderById,
   updateOrder,
+  getOrdersByUser,
 };

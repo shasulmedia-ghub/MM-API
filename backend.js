@@ -26,9 +26,10 @@ app.delete('/api/cart/user/:userId', cart.clearCart);
 app.delete('/api/cart/items', cart.removeSelectedItems);
 
 // Order APIs
-app.post('/api/orders',          orders.createOrder);
-app.get('/api/orders/:orderId',  orders.getOrderById);
-app.put('/api/orders/:orderId',  orders.updateOrder);
+app.post('/api/orders',              orders.createOrder);
+app.get('/api/orders/user/:userId',  orders.getOrdersByUser);
+app.get('/api/orders/:orderId',      orders.getOrderById);
+app.put('/api/orders/:orderId',      orders.updateOrder);
 
 
 // Product APIs
