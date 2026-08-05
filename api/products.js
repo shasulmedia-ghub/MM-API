@@ -30,11 +30,11 @@ async function getProducts(req, res) {
 }
 
 // =======================================================================
-// GET /api/products/category/:categoryId
+// GET /api/products/category/:category_id
 // Get all products belonging to a specific category
 // =======================================================================
 async function getProductsByCategory(req, res) {
-  const { categoryId } = req.params;
+  const { category_id } = req.params;
 
   try {
     const result = await pool.query(
@@ -50,7 +50,7 @@ async function getProductsByCategory(req, res) {
          JOIN categories c ON c.id = p.category_id
         WHERE p.category_id = $1
         ORDER BY p.id`,
-      [categoryId]
+      [category_id]
     );
 
     res.json(result.rows);
@@ -63,14 +63,14 @@ async function getProductsByCategory(req, res) {
 // =======================================================================
 // POST /api/products
 // Add a new product
-// Body: { categoryId, productName, description, defaultImage }
+// Body: { category_id, productName, description, defaultImage }
 // =======================================================================
 async function addProduct(req, res) {
-  const { categoryId, productName, description, defaultImage } = req.body;
+  const { category_id, productName, description, defaultImage } = req.body;
 
-  if (!categoryId || !productName) {
+  if (!category_id || !productName) {
     return res.status(400).json({
-      error: 'categoryId and productName are required',
+      error: 'category_id and productName are required',
     });
   }
 
@@ -79,14 +79,14 @@ async function addProduct(req, res) {
       `INSERT INTO products (category_id, product_name, description, default_image)
        VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [categoryId, productName, description || null, defaultImage || null]
+      [category_id, productName, description || null, defaultImage || null]
     );
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error(err);
     if (err.code === '23503') {
-      return res.status(409).json({ error: 'categoryId does not reference an existing category' });
+      return res.status(409).json({ error: 'category_id does not reference an existing category' });
     }
     res.status(500).json({ error: 'Failed to add product' });
   }
@@ -95,11 +95,11 @@ async function addProduct(req, res) {
 // =======================================================================
 // PUT /api/products/:id
 // Update an existing product
-// Body: any of { categoryId, productName, description, defaultImage }
+// Body: any of { category_id, productName, description, defaultImage }
 // =======================================================================
 async function updateProduct(req, res) {
   const { id } = req.params;
-  const { categoryId, productName, description, defaultImage } = req.body;
+  const { category_id, productName, description, defaultImage } = req.body;
 
   try {
     const result = await pool.query(
@@ -111,7 +111,7 @@ async function updateProduct(req, res) {
               updated_at     = CURRENT_TIMESTAMP
         WHERE id = $5
       RETURNING *`,
-      [categoryId, productName, description, defaultImage, id]
+      [category_id, productName, description, defaultImage, id]
     );
 
     if (result.rows.length === 0) {
