@@ -63,14 +63,14 @@ async function getProductsByCategory(req, res) {
 // =======================================================================
 // POST /api/products
 // Add a new product
-// Body: { category_id, productName, description, defaultImage }
+// Body: { category_id, product_name, description, default_image }
 // =======================================================================
 async function addProduct(req, res) {
-  const { category_id, productName, description, defaultImage } = req.body;
+  const { category_id, product_name, description, default_image } = req.body;
 
-  if (!category_id || !productName) {
+  if (!category_id || !product_name) {
     return res.status(400).json({
-      error: 'category_id and productName are required',
+      error: 'category_id and product_name are required',
     });
   }
 
@@ -79,7 +79,7 @@ async function addProduct(req, res) {
       `INSERT INTO products (category_id, product_name, description, default_image)
        VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [category_id, productName, description || null, defaultImage || null]
+      [category_id, product_name, description || null, default_image || null]
     );
 
     res.status(201).json(result.rows[0]);
@@ -95,11 +95,11 @@ async function addProduct(req, res) {
 // =======================================================================
 // PUT /api/products/:id
 // Update an existing product
-// Body: any of { category_id, productName, description, defaultImage }
+// Body: any of { category_id, product_name, description, default_image }
 // =======================================================================
 async function updateProduct(req, res) {
   const { id } = req.params;
-  const { category_id, productName, description, defaultImage } = req.body;
+  const { category_id, product_name, description, default_image } = req.body;
 
   try {
     const result = await pool.query(
@@ -111,7 +111,7 @@ async function updateProduct(req, res) {
               updated_at     = CURRENT_TIMESTAMP
         WHERE id = $5
       RETURNING *`,
-      [category_id, productName, description, defaultImage, id]
+      [category_id, product_name, description, default_image, id]
     );
 
     if (result.rows.length === 0) {
