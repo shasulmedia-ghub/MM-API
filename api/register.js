@@ -47,11 +47,19 @@ module.exports = async (req, res) => {
     // Insert user
 
     const result = await pool.query(
-      `INSERT INTO users(firstName,lastName,email,password_hash)
-             VALUES($1,$2,$3,$4)
-             RETURNING id,firstName,lastName,email`,
+      INSERT INTO users ( first_name, last_name, email, password, date_of_birth, gender, address, marketing_opt_in ) 
+      VALUES ( $1, $2, $3, $4, $5, $6, $7, $8 )
+      RETURNING id, first_name, last_name, email, date_of_birth, gender, address, marketing_opt_in, role,
 
-      [firstName, lastName, email, hashedPassword],
+      [ firstName.trim(), 
+         lastName.trim(), 
+       normalizedEmail, 
+       hashedPassword, 
+       dateOfBirth || null, 
+       gender || null, 
+       address?.trim() || null, 
+       marketingOptIn ?? false, 
+      ]    
     );
 
     return res.status(201).json({
