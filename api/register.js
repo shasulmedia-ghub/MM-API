@@ -14,10 +14,10 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { first_name, last_name, email, password } = req.body;
+    const { firstName, lastName, email, password } = req.body;
 
     // Basic validation
-    if (!first_name || !last_name || !email || !password) {
+    if (!firstName || !lastName || !email || !password) {
       return res.status(400).json({
         success: false,
         message: "All fields are required",
@@ -47,11 +47,11 @@ module.exports = async (req, res) => {
     // Insert user
 
     const result = await pool.query(
-      `INSERT INTO users(first_name,last_name,email,password_hash)
+      `INSERT INTO users(firstName,lastName,email,password_hash)
              VALUES($1,$2,$3,$4)
-             RETURNING id,first_name,last_name,email`,
+             RETURNING id,firstName,lastName,email`,
 
-      [first_name, last_name, email, hashedPassword],
+      [firstName, lastName, email, hashedPassword],
     );
 
     return res.status(201).json({
