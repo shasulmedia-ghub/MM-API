@@ -35,10 +35,10 @@ async function registerUser(req, res) {
 
     const result = await pool.query(
       `INSERT INTO users
-              (email, password_hash, first_name, last_name, date_of_birth,
+              (email, password_hash, firstName, lastName, date_of_birth,
                gender, address, marketing_opt_in)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-       RETURNING id, email, role, first_name, last_name, created_at`,
+       RETURNING id, email, role, firstName, lastName, created_at`,
       [
         email,
         passwordHash,
@@ -110,8 +110,8 @@ async function loginUser(req, res) {
         id: user.id,
         email: user.email,
         role: user.role,
-        firstName: user.first_name,
-        lastName: user.last_name,
+        firstName: user.firstName,
+        lastName: user.lastName,
       },
     });
   } catch (err) {
@@ -145,8 +145,8 @@ async function updateUser(req, res) {
 
     const result = await pool.query(
       `UPDATE users
-          SET first_name        = COALESCE($1, first_name),
-              last_name         = COALESCE($2, last_name),
+          SET firstName        = COALESCE($1, firstName),
+              lastName         = COALESCE($2, lastName),
               date_of_birth     = COALESCE($3, date_of_birth),
               gender            = COALESCE($4, gender),
               address           = COALESCE($5, address),
@@ -156,7 +156,7 @@ async function updateUser(req, res) {
               password_hash     = COALESCE($9, password_hash),
               updated_at        = CURRENT_TIMESTAMP
         WHERE id = $10
-      RETURNING id, email, role, first_name, last_name, date_of_birth,
+      RETURNING id, email, role, firstName, lastName, date_of_birth,
                 gender, address, marketing_opt_in, account_status, updated_at`,
       [
         firstName,
