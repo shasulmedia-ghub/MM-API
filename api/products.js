@@ -211,6 +211,71 @@ async function addCategory(req, res) {
   }
 }
 
+
+// =======================================================================
+// PUT /api/categories/:id
+// Update an existing category
+// =======================================================================
+async function updateCategory(req, res) {
+  const { id } = req.params;
+  const { categoryName, slug } = req.body;
+
+  try {
+    const result = await pool.query(
+      `UPDATE categories
+          SET category_name = COALESCE($1, category_name),
+              slug = COALESCE($2, slug)
+        WHERE id = $3
+      RETURNING *`,
+      [categoryName, slug, id],
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Category not found" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    if (err.code === "23505") {
+      return res
+        .status(409)
+        .json({ error: "A category with that slug already exists" });
+    }
+    res.status(500).json({ error: "Failed to update category" });
+  }
+}
+
+// =======================================================================
+// DELETE /api/categories/:id
+// Delete a category
+// =======================================================================
+async function deleteCategory(req, res) {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      "DELETE FROM categories WHERE id = $1 RETURNING id",
+      [id],
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Category not found" });
+    }
+
+    res.json({ message: "Category deleted", id: result.rows[0].id });
+  } catch (err) {
+    console.error(err);
+    if (err.code === "23503") {
+      return res.status(409).json({
+        error: "Cannot delete category: products are still assigned to it",
+      });
+    }
+    res.status(500).json({ error: "Failed to delete category" });
+  }
+}
+
+
 // =======================================================================
 // GET /api/products/:productId/variants
 // Get all variants for a specific product
@@ -366,6 +431,8 @@ module.exports = {
   deleteProduct,
   getCategories,
   addCategory,
+  updateCategory,
+  deleteCategory,
   getProductVariants,
   addProductVariants,
   updateProductVariants,
