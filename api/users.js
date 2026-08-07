@@ -33,22 +33,20 @@ async function registerUser(req, res) {
   try {
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
-    const result = await pool.query(
-      `INSERT INTO users
-              (email, password_hash, firstName, lastName, date_of_birth,
-               gender, address, marketing_opt_in)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-       RETURNING id, email, role, firstName, lastName, created_at`,
-      [
-        email,
-        passwordHash,
-        firstName || null,
-        lastName || null,
-        dateOfBirth || null,
-        gender || null,
-        address || null,
-        marketingOptIn ?? false,
-      ]
+ const result = await pool.query(
+      INSERT INTO users ( first_name, last_name, email, password, date_of_birth, gender, address, marketing_opt_in ) 
+      VALUES ( $1, $2, $3, $4, $5, $6, $7, $8 )
+      RETURNING id, first_name, last_name, email, date_of_birth, gender, address, marketing_opt_in, role,
+
+      [ firstName.trim(), 
+         lastName.trim(), 
+       email, 
+       passwordHash, 
+       dateOfBirth || null, 
+       gender || null, 
+       address?.trim() || null, 
+       marketingOptIn ?? false, 
+      ]    
     );
 
     res.status(201).json(result.rows[0]);
@@ -110,8 +108,8 @@ async function loginUser(req, res) {
         id: user.id,
         email: user.email,
         role: user.role,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        firstName: user.first_name,
+        lastName: user.last_name,
       },
     });
   } catch (err) {
@@ -135,7 +133,6 @@ async function updateUser(req, res) {
     gender,
     address,
     marketingOptIn,
-    accountStatus,
     role,
     password,
   } = req.body;
@@ -145,18 +142,17 @@ async function updateUser(req, res) {
 
     const result = await pool.query(
       `UPDATE users
-          SET firstName        = COALESCE($1, firstName),
-              lastName         = COALESCE($2, lastName),
+          SET first_name        = COALESCE($1, firstName),
+              last_name         = COALESCE($2, lastName),
               date_of_birth     = COALESCE($3, date_of_birth),
               gender            = COALESCE($4, gender),
               address           = COALESCE($5, address),
               marketing_opt_in  = COALESCE($6, marketing_opt_in),
-              account_status    = COALESCE($7, account_status),
-              role              = COALESCE($8, role),
-              password_hash     = COALESCE($9, password_hash),
+              role              = COALESCE($7, role),
+              password_hash     = COALESCE($8, password_hash),
               updated_at        = CURRENT_TIMESTAMP
-        WHERE id = $10
-      RETURNING id, email, role, firstName, lastName, date_of_birth,
+        WHERE id = $9
+      RETURNING id, email, role, first_name, last_name, date_of_birth,
                 gender, address, marketing_opt_in, account_status, updated_at`,
       [
         firstName,
@@ -165,7 +161,6 @@ async function updateUser(req, res) {
         gender,
         address,
         marketingOptIn,
-        accountStatus,
         role,
         passwordHash,
         id,
