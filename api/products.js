@@ -434,6 +434,50 @@ async function deleteCategory(req, res) {
 // GET /api/products/:productId/variants
 // Get all variants for a specific product
 // =======================================================================
+async function getProductDetails(req, res) {
+  const { productId } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT
+    p.id,
+    p.category_id,
+    p.product_name,
+    p.description,
+    p.default_image,
+    p.created_at,
+    p.updated_at,
+    c.category_name,
+    COALESCE(v.stock_quantity, 0) AS stock_quantity,
+    COALESCE(v.unit_price, 0) as unit_price,
+    v.image_url,
+    v.field,
+    v.colour,
+    v.size,
+    v.new_arrival,
+    v.id as variant_id
+FROM products p
+JOIN categories c
+    ON c.id = p.category_id
+JOIN product_variants v
+    ON v.product_id = p.id
+WHERE p.id = $1`,
+      [productId]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch product details' });
+  }
+}
+
+
+
+// =======================================================================
+// GET /api/products/:productId/variants
+// Get all variants for a specific product
+// =======================================================================
 async function getProductVariants(req, res) {
   const { productId } = req.params;
 

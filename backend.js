@@ -46,6 +46,7 @@ app.put('/api/categories/:id', products.updateCategory);
 app.delete('/api/categories/:id', products.deleteCategory);
 
 app.get('/api/products/:productId/variants', products.getProductVariants);
+app.get('/api/products/:productId/details', products.getProductDetails);
 app.post('/api/variants', products.addProductVariants);
 app.put('/api/variants/:id', products.updateProductVariants);
 app.delete('/api/variants/:id', products.deleteProductVariants);
