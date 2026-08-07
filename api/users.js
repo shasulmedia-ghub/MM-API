@@ -34,9 +34,9 @@ async function registerUser(req, res) {
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
  const result = await pool.query(
-      INSERT INTO users ( first_name, last_name, email, password, date_of_birth, gender, address, marketing_opt_in ) 
+      `INSERT INTO users ( first_name, last_name, email, password, date_of_birth, gender, address, marketing_opt_in ) 
       VALUES ( $1, $2, $3, $4, $5, $6, $7, $8 )
-      RETURNING id, first_name, last_name, email, date_of_birth, gender, address, marketing_opt_in, role,
+      RETURNING id, first_name, last_name, email, date_of_birth, gender, address, marketing_opt_in, role`,
       [ 
         firstName.trim(), 
         lastName.trim(), 
