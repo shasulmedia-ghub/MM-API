@@ -34,7 +34,7 @@ async function registerUser(req, res) {
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
  const result = await pool.query(
-      `INSERT INTO users ( first_name, last_name, email, password, date_of_birth, gender, address, marketing_opt_in ) 
+      `INSERT INTO users ( first_name, last_name, email, password_hash, date_of_birth, gender, address, marketing_opt_in ) 
       VALUES ( $1, $2, $3, $4, $5, $6, $7, $8 )
       RETURNING id, first_name, last_name, email, date_of_birth, gender, address, marketing_opt_in, role`,
       [ 
@@ -82,9 +82,9 @@ async function loginUser(req, res) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    if (user.account_status !== 'active') {
+/*     if (user.account_status !== 'active') {
       return res.status(403).json({ error: `Account is ${user.account_status}` });
-    }
+    } */
 
     const passwordMatches = await bcrypt.compare(password, user.password_hash);
     if (!passwordMatches) {
