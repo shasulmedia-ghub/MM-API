@@ -18,12 +18,14 @@ async function getProductList(req, res) {
     p.created_at,
     p.updated_at,
     c.category_name,
-    COALESCE(v.stock_quantity, 0) AS stock_quantity
+    COALESCE(v.stock_quantity, 0) AS stock_quantity,
+  COALESCE(v.unit_price,0) as unit_price
 FROM products p
 JOIN categories c
     ON c.id = p.category_id
 LEFT JOIN (
-    SELECT product_id, SUM(COALESCE(stock_quantity, 0)) AS stock_quantity
+    SELECT product_id, min(unit_price) as unit_price, 
+    SUM(COALESCE(stock_quantity, 0)) AS stock_quantity
     FROM product_variants v
     GROUP BY product_id
 ) v ON v.product_id = p.id
