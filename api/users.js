@@ -37,15 +37,15 @@ async function registerUser(req, res) {
       INSERT INTO users ( first_name, last_name, email, password, date_of_birth, gender, address, marketing_opt_in ) 
       VALUES ( $1, $2, $3, $4, $5, $6, $7, $8 )
       RETURNING id, first_name, last_name, email, date_of_birth, gender, address, marketing_opt_in, role,
-
-      [ firstName.trim(), 
-         lastName.trim(), 
-       email, 
-       passwordHash, 
-       dateOfBirth || null, 
-       gender || null, 
-       address?.trim() || null, 
-       marketingOptIn ?? false, 
+      [ 
+        firstName.trim(), 
+        lastName.trim(), 
+        email, 
+        passwordHash, 
+        dateOfBirth || null, 
+        gender || null, 
+        address?.trim() || null, 
+        marketingOptIn ?? false, 
       ]    
     );
 
