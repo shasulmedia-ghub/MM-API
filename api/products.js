@@ -4,7 +4,7 @@ const cors = require("./cors");
 
 // =======================================================================
 // GET /api/products
-// Get all products
+// Get all products along with their variant data (price, stock, etc.)
 // =======================================================================
 async function getProducts(req, res) {
   try {
@@ -16,9 +16,18 @@ async function getProducts(req, res) {
               p.default_image,
               p.created_at,
               p.updated_at,
-              c.category_name
+              c.category_name,
+              v.id AS variant_id,
+              v.unit_price AS price,
+              v.stock_quantity,
+              v.image_url,
+              v.size,
+              v.colour,
+              v.field,
+              v.new_arrival
          FROM products p
          JOIN categories c ON c.id = p.category_id
+         LEFT JOIN product_variants v ON v.product_id = p.id
         ORDER BY p.id`
     );
 
@@ -31,7 +40,7 @@ async function getProducts(req, res) {
 
 // =======================================================================
 // GET /api/products/category/:category_id
-// Get all products belonging to a specific category
+// Get all products belonging to a specific category with variant data
 // =======================================================================
 async function getProductsByCategory(req, res) {
   const { category_id } = req.params;
@@ -45,9 +54,18 @@ async function getProductsByCategory(req, res) {
               p.default_image,
               p.created_at,
               p.updated_at,
-              c.category_name
+              c.category_name,
+              v.id AS variant_id,
+              v.unit_price AS price,
+              v.stock_quantity,
+              v.image_url,
+              v.size,
+              v.colour,
+              v.field,
+              v.new_arrival
          FROM products p
          JOIN categories c ON c.id = p.category_id
+         LEFT JOIN product_variants v ON v.product_id = p.id
         WHERE p.category_id = $1
         ORDER BY p.id`,
       [category_id]
@@ -62,11 +80,23 @@ async function getProductsByCategory(req, res) {
 
 // =======================================================================
 // POST /api/products
-// Add a new product
-// Body: { category_id, product_name, description, default_image }
+// Add a new product and its initial variant (price, stock, etc.)
+// Body: { category_id, product_name, description, default_image, etc }
 // =======================================================================
 async function addProduct(req, res) {
-  const { category_id, product_name, description, default_image } = req.body;
+  const { 
+    category_id, 
+    product_name, 
+    description, 
+    default_image,
+    unitPrice,        // New: From your variant fields
+    stockQuantity,    // New: From your variant fields
+    imageUrl,         // New
+    size,             // New
+    colour,           // New
+    field,            // New
+    newArrival        // New
+  } = req.body;
 
   if (!category_id || !product_name) {
     return res.status(400).json({
@@ -74,54 +104,141 @@ async function addProduct(req, res) {
     });
   }
 
+  const client = await pool.connect();
+
   try {
-    const result = await pool.query(
+    await client.query('BEGIN');
+
+    // 1. Insert into products table
+    const productResult = await client.query(
       `INSERT INTO products (category_id, product_name, description, default_image)
        VALUES ($1, $2, $3, $4)
        RETURNING *`,
       [category_id, product_name, description || null, default_image || null]
     );
 
-    res.status(201).json(result.rows[0]);
+    const newProduct = productResult.rows[0];
+
+    // 2. Insert into product_variants table simultaneously
+    const variantResult = await client.query(
+      `INSERT INTO product_variants
+            (product_id, field, colour, size, unit_price, stock_quantity, image_url, new_arrival)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING *`,
+      [
+        newProduct.id,
+        field || null,
+        colour || null,
+        size || null,
+        unitPrice ?? 0.00,
+        stockQuantity ?? 15,
+        imageUrl || default_image || null,
+        newArrival ?? false
+      ]
+    );
+
+    await client.query('COMMIT');
+
+    // Return combined object so frontend receives everything smoothly
+    res.status(201).json({
+      ...newProduct,
+      variant_id: variantResult.rows[0].id,
+      price: variantResult.rows[0].unit_price,
+      stock_quantity: variantResult.rows[0].stock_quantity,
+      image_url: variantResult.rows[0].image_url
+    });
+
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error(err);
     if (err.code === '23503') {
       return res.status(409).json({ error: 'category_id does not reference an existing category' });
     }
-    res.status(500).json({ error: 'Failed to add product' });
+    res.status(500).json({ error: 'Failed to add product and variant' });
+  } finally {
+    client.release();
   }
 }
 
 // =======================================================================
 // PUT /api/products/:id
-// Update an existing product
-// Body: any of { category_id, product_name, description, default_image }
+// Update an existing product and its variant details
+// Body: any of { category_id, product_name, description, default_image, etc}
 // =======================================================================
 async function updateProduct(req, res) {
   const { id } = req.params;
-  const { category_id, product_name, description, default_image } = req.body;
+  const { 
+    category_id, 
+    product_name, 
+    description, 
+    default_image,
+    unitPrice,
+    stockQuantity,
+    imageUrl,
+    size,
+    colour,
+    field,
+    newArrival
+  } = req.body;
+
+  const client = await pool.connect();
 
   try {
-    const result = await pool.query(
+    await client.query('BEGIN');
+
+    // 1. Update products table
+    const productResult = await client.query(
       `UPDATE products
-          SET category_id    = COALESCE($1, category_id),
-              product_name   = COALESCE($2, product_name),
-              description    = COALESCE($3, description),
-              default_image  = COALESCE($4, default_image),
-              updated_at     = CURRENT_TIMESTAMP
+          SET category_id   = COALESCE($1, category_id),
+              product_name  = COALESCE($2, product_name),
+              description   = COALESCE($3, description),
+              default_image = COALESCE($4, default_image),
+              updated_at    = CURRENT_TIMESTAMP
         WHERE id = $5
       RETURNING *`,
       [category_id, product_name, description, default_image, id]
     );
 
-    if (result.rows.length === 0) {
+    if (productResult.rows.length === 0) {
+      await client.query('ROLLBACK');
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    res.json(result.rows[0]);
+    // 2. Update product_variants table (updates the first matching variant or adjust based on your app design)
+    const variantResult = await client.query(
+      `UPDATE product_variants
+          SET field          = COALESCE($1, field),
+              colour         = COALESCE($2, colour),
+              size           = COALESCE($3, size),
+              unit_price     = COALESCE($4, unit_price),
+              stock_quantity = COALESCE($5, stock_quantity),
+              image_url      = COALESCE($6, image_url),
+              new_arrival    = COALESCE($7, new_arrival),
+              updated_at     = CURRENT_TIMESTAMP
+        WHERE product_id = $8
+      RETURNING *`,
+      [field, colour, size, unitPrice, stockQuantity, imageUrl, newArrival, id]
+    );
+
+    await client.query('COMMIT');
+
+    const updatedProduct = productResult.rows[0];
+    const updatedVariant = variantResult.rows[0] || {};
+
+    res.json({
+      ...updatedProduct,
+      variant_id: updatedVariant.id,
+      price: updatedVariant.unit_price,
+      stock_quantity: updatedVariant.stock_quantity,
+      image_url: updatedVariant.image_url
+    });
+
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error(err);
-    res.status(500).json({ error: 'Failed to update product' });
+    res.status(500).json({ error: 'Failed to update product and variant' });
+  } finally {
+    client.release();
   }
 }
 
