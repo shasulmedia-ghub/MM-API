@@ -623,6 +623,7 @@ async function deleteProductVariants(req, res) {
 
 module.exports = {
   getProductList,
+  getProductDetails,
   getProducts,
   getProductsByCategory,
   addProduct,
