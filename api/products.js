@@ -3,6 +3,41 @@ const pool = require('../db');
 const cors = require("./cors");
 
 // =======================================================================
+// GET /api/productList
+// Get all products along with combined stock quantity
+// =======================================================================
+async function getProductList(req, res) {
+  try {
+    const result = await pool.query(
+      `SELECT
+    p.id,
+    p.category_id,
+    p.product_name,
+    p.description,
+    p.default_image,
+    p.created_at,
+    p.updated_at,
+    c.category_name,
+    COALESCE(v.stock_quantity, 0) AS stock_quantity
+FROM products p
+JOIN categories c
+    ON c.id = p.category_id
+LEFT JOIN (
+    SELECT product_id, SUM(COALESCE(stock_quantity, 0)) AS stock_quantity
+    FROM product_variants v
+    GROUP BY product_id
+) v ON v.product_id = p.id
+ORDER BY p.id;`
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch productList' });
+  }
+}
+
+// =======================================================================
 // GET /api/products
 // Get all products along with their variant data (price, stock, etc.)
 // =======================================================================
@@ -541,6 +576,7 @@ async function deleteProductVariants(req, res) {
 }
 
 module.exports = {
+  getProductList,
   getProducts,
   getProductsByCategory,
   addProduct,

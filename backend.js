@@ -34,6 +34,7 @@ app.put('/api/orders/:orderId',      orders.updateOrder);
 
 // Product APIs
 app.get('/api/products', products.getProducts);
+app.get('/api/product/list', products.getProductList);
 app.get('/api/products/category/:categoryId', products.getProductsByCategory);
 app.post('/api/products', products.addProduct);
 app.put('/api/products/:id', products.updateProduct);
