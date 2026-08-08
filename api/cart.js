@@ -42,7 +42,7 @@ async function getCart(req, res) {
               ci.unit_price,
               p.product_name,
               p.description,
-              p.default_image
+              p.default_image,
               v.stock_quantity,
               v.image_url
          FROM cart_items ci
