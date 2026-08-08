@@ -43,8 +43,11 @@ async function getCart(req, res) {
               p.product_name,
               p.description,
               p.default_image
+              v.stock_quantity,
+              v.image_url
          FROM cart_items ci
          JOIN products p ON p.id = ci.product_id
+          JOIN product_variants v ON v.id = ci.variant_id
         WHERE ci.cart_id = $1
         ORDER BY ci.id`,
       [cart.id]
@@ -97,7 +100,7 @@ async function getCartSummary(req, res) {
 // Body: { userId, productId, colour, size, quantity, unitPrice }
 // =======================================================================
 async function addToCart(req, res) {
-  const { userId, productId, colour, size, quantity, unitPrice } = req.body;
+  const { userId, productId, colour, size, quantity, unitPrice, variantId } = req.body;
 
   if (!userId || !productId || !quantity || unitPrice == null) {
     return res.status(400).json({
@@ -111,9 +114,8 @@ async function addToCart(req, res) {
     const existing = await pool.query(
       `SELECT * FROM cart_items
         WHERE cart_id = $1 AND product_id = $2
-          AND colour IS NOT DISTINCT FROM $3
-          AND size IS NOT DISTINCT FROM $4`,
-      [cart.id, productId, colour || null, size || null]
+          AND variant_id = $3`,
+      [cart.id, productId, variantId]
     );
 
     let result;
@@ -127,10 +129,10 @@ async function addToCart(req, res) {
       );
     } else {
       result = await pool.query(
-        `INSERT INTO cart_items (product_id, cart_id, colour, size, quantity, unit_price)
-         VALUES ($1, $2, $3, $4, $5, $6)
+        `INSERT INTO cart_items (product_id, cart_id, colour, size, quantity, unit_price, variant_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING *`,
-        [productId, cart.id, colour || null, size || null, quantity, unitPrice]
+        [productId, cart.id, colour || null, size || null, quantity, unitPrice, variantId]
       );
     }
 
