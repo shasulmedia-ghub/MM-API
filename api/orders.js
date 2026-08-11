@@ -179,6 +179,64 @@ async function getOrderById(req, res) {
 }
 
 // =======================================================================
+// GET /api/orders/active
+// Get full order details of active or pending order (order row + all order items
+// with product names and variant info)
+// =======================================================================
+async function getActiveOrder(req, res) {
+
+  try {
+    // Fetch order row
+    const orderResult = await pool.query(
+      `SELECT o.id,
+              o.user_id,
+              o.total_amount,
+              o.status,
+              o.shipping_address,
+              o.created_at,
+              u.email,
+              u.first_name,
+              u.last_name
+         FROM orders o
+         JOIN users u ON u.id = o.user_id
+        WHERE o.status = 'paid' or o.status = 'pending'`
+    );
+
+    if (orderResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    const order = orderResult.rows[0];
+
+    // Fetch order items with product details
+    const itemsResult = await pool.query(
+      `SELECT oi.id,
+              oi.product_id,
+              oi.quantity,
+              oi.unit_price,
+              oi.colour,
+              oi.size,
+              p.product_name,
+              p.default_image
+         FROM order_items oi
+         JOIN products p ON p.id = oi.product_id
+        WHERE oi.order_id = $1
+        ORDER BY oi.id`,
+      [orderId]
+    );
+
+    res.json({
+      order,
+      orderItems: itemsResult.rows,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch active order details' });
+  }
+}
+
+
+// =======================================================================
 // PUT /api/orders/:orderId
 // Update an order's status or shipping address
 // Body: any of { status, shippingAddress }
@@ -274,4 +332,5 @@ module.exports = {
   getOrderById,
   updateOrder,
   getOrdersByUser,
+  getActiveOrder,
 };
