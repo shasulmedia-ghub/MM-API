@@ -4,6 +4,7 @@ const cart = require('./api/cart');
 const products = require('./api/products');
 const users = require('./api/users');
 const orders = require('./api/orders');
+const dashboard = require('./api/dashboard');
 
 const app = express(); 
 
@@ -51,5 +52,10 @@ app.get('/api/products/:productId/details', products.getProductDetails);
 app.post('/api/variants', products.addProductVariants);
 app.put('/api/variants/:id', products.updateProductVariants);
 app.delete('/api/variants/:id', products.deleteProductVariants);
+
+// Dashboard APIs
+app.get('/api/dashboard/today-sales',          dashboard.getTodaySales);
+app.get('/api/dashboard/active-orders-summary', dashboard.getActiveOrdersSummary);
+app.get('/api/dashboard/low-stock',             dashboard.getLowStock);
 
 module.exports = app;
