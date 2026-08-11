@@ -186,52 +186,47 @@ async function getOrderById(req, res) {
 async function getActiveOrder(req, res) {
 
   try {
-    // Fetch order row
-    const orderResult = await pool.query(
+    // Fetch all orders for this user
+    const ordersResult = await pool.query(
       `SELECT o.id,
               o.user_id,
               o.total_amount,
               o.status,
               o.shipping_address,
-              o.created_at,
-              u.email,
-              u.first_name,
-              u.last_name
+              o.created_at
          FROM orders o
-         JOIN users u ON u.id = o.user_id
-        WHERE o.status = 'paid' or o.status = 'pending'`
-    );
-
-    if (orderResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Order not found' });
-    }
-
-    const order = orderResult.rows[0];
-
-    // Fetch order items with product details
-    const itemsResult = await pool.query(
-      `SELECT oi.id,
-              oi.product_id,
-              oi.quantity,
-              oi.unit_price,
-              oi.colour,
-              oi.size,
-              p.product_name,
-              p.default_image
-         FROM order_items oi
-         JOIN products p ON p.id = oi.product_id
-         JOIN orders o ON o.id = oi.order_id
         WHERE o.status = 'paid' or o.status = 'pending'
-        ORDER BY oi.id`
+        ORDER BY o.created_at DESC`
     );
 
-    res.json({
-      order,
-      orderItems: itemsResult.rows,
-    });
+    const orders = ordersResult.rows;
+
+    // For each order, fetch its items with product details
+    const ordersWithItems = await Promise.all(
+      orders.map(async (order) => {
+        const itemsResult = await pool.query(
+          `SELECT oi.id,
+                  oi.product_id,
+                  oi.quantity,
+                  oi.unit_price,
+                  oi.colour,
+                  oi.size,
+                  p.product_name,
+                  p.default_image
+             FROM order_items oi
+             JOIN products p ON p.id = oi.product_id
+            WHERE oi.order_id = $1
+            ORDER BY oi.id`,
+          [order.id]
+        );
+        return { ...order, orderItems: itemsResult.rows };
+      })
+    );
+
+    res.json(ordersWithItems);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to fetch active order details' });
+    res.status(500).json({ error: 'Failed to fetch orders for user' });
   }
 }
 
