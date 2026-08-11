@@ -220,9 +220,9 @@ async function getActiveOrder(req, res) {
               p.default_image
          FROM order_items oi
          JOIN products p ON p.id = oi.product_id
-        WHERE oi.order_id = $1
-        ORDER BY oi.id`,
-      [orderId]
+         JOIN orders o ON o.id = oi.order_id
+        WHERE o.status = 'paid' or o.status = 'pending'
+        ORDER BY oi.id`
     );
 
     res.json({
