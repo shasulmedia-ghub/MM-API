@@ -1,5 +1,5 @@
 // products.js
-const pool = require('../db');
+const pool = require("../db");
 const cors = require("./cors");
 
 // =======================================================================
@@ -65,13 +65,13 @@ async function getProducts(req, res) {
          FROM products p
          JOIN categories c ON c.id = p.category_id
          LEFT JOIN product_variants v ON v.product_id = p.id
-        ORDER BY p.id`
+        ORDER BY p.id`,
     );
 
     res.json(result.rows);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to fetch products' });
+    res.status(500).json({ error: "Failed to fetch products" });
   }
 }
 
@@ -105,13 +105,15 @@ async function getProductsByCategory(req, res) {
          LEFT JOIN product_variants v ON v.product_id = p.id
         WHERE p.category_id = $1
         ORDER BY p.id`,
-      [category_id]
+      [category_id],
     );
 
     res.json(result.rows);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to fetch products for this category' });
+    res
+      .status(500)
+      .json({ error: "Failed to fetch products for this category" });
   }
 }
 
@@ -121,37 +123,37 @@ async function getProductsByCategory(req, res) {
 // Body: { category_id, product_name, description, default_image, etc }
 // =======================================================================
 async function addProduct(req, res) {
-  const { 
-    category_id, 
-    product_name, 
-    description, 
+  const {
+    category_id,
+    product_name,
+    description,
     default_image,
-    unitPrice,        // New: From your variant fields
-    stockQuantity,    // New: From your variant fields
-    imageUrl,         // New
-    size,             // New
-    colour,           // New
-    field,            // New
-    newArrival        // New
+    unit_price, // New: From your variant fields
+    stock_quantity, // New: From your variant fields
+    image_url, // New
+    size, // New
+    colour, // New
+    field, // New
+    new_arrival, // New
   } = req.body;
 
   if (!category_id || !product_name) {
     return res.status(400).json({
-      error: 'category_id and product_name are required',
+      error: "category_id and product_name are required",
     });
   }
 
   const client = await pool.connect();
 
   try {
-    await client.query('BEGIN');
+    await client.query("BEGIN");
 
     // 1. Insert into products table
     const productResult = await client.query(
       `INSERT INTO products (category_id, product_name, description, default_image)
        VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [category_id, product_name, description || null, default_image || null]
+      [category_id, product_name, description || null, default_image || null],
     );
 
     const newProduct = productResult.rows[0];
@@ -167,14 +169,14 @@ async function addProduct(req, res) {
         field || null,
         colour || null,
         size || null,
-        unitPrice ?? 0.00,
-        stockQuantity ?? 15,
-        imageUrl || default_image || null,
-        newArrival ?? false
-      ]
+        unit_price ?? 0.0,
+        stock_quantity ?? 15,
+        image_url || default_image || null,
+        new_arrival ?? false,
+      ],
     );
 
-    await client.query('COMMIT');
+    await client.query("COMMIT");
 
     // Return combined object so frontend receives everything smoothly
     res.status(201).json({
@@ -182,16 +184,17 @@ async function addProduct(req, res) {
       variant_id: variantResult.rows[0].id,
       price: variantResult.rows[0].unit_price,
       stock_quantity: variantResult.rows[0].stock_quantity,
-      image_url: variantResult.rows[0].image_url
+      image_url: variantResult.rows[0].image_url,
     });
-
   } catch (err) {
-    await client.query('ROLLBACK');
+    await client.query("ROLLBACK");
     console.error(err);
-    if (err.code === '23503') {
-      return res.status(409).json({ error: 'category_id does not reference an existing category' });
+    if (err.code === "23503") {
+      return res
+        .status(409)
+        .json({ error: "category_id does not reference an existing category" });
     }
-    res.status(500).json({ error: 'Failed to add product and variant' });
+    res.status(500).json({ error: "Failed to add product and variant" });
   } finally {
     client.release();
   }
@@ -204,24 +207,24 @@ async function addProduct(req, res) {
 // =======================================================================
 async function updateProduct(req, res) {
   const { id } = req.params;
-  const { 
-    category_id, 
-    product_name, 
-    description, 
+  const {
+    category_id,
+    product_name,
+    description,
     default_image,
-    unitPrice,
-    stockQuantity,
-    imageUrl,
+    unit_price,
+    stock_quantity,
+    image_url,
     size,
     colour,
     field,
-    newArrival
+    new_arrival,
   } = req.body;
 
   const client = await pool.connect();
 
   try {
-    await client.query('BEGIN');
+    await client.query("BEGIN");
 
     // 1. Update products table
     const productResult = await client.query(
@@ -233,12 +236,12 @@ async function updateProduct(req, res) {
               updated_at    = CURRENT_TIMESTAMP
         WHERE id = $5
       RETURNING *`,
-      [category_id, product_name, description, default_image, id]
+      [category_id, product_name, description, default_image, id],
     );
 
     if (productResult.rows.length === 0) {
-      await client.query('ROLLBACK');
-      return res.status(404).json({ error: 'Product not found' });
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "Product not found" });
     }
 
     // 2. Update product_variants table (updates the first matching variant or adjust based on your app design)
@@ -254,10 +257,19 @@ async function updateProduct(req, res) {
               updated_at     = CURRENT_TIMESTAMP
         WHERE product_id = $8
       RETURNING *`,
-      [field, colour, size, unitPrice, stockQuantity, imageUrl, newArrival, id]
+      [
+        field,
+        colour,
+        size,
+        unit_price,
+        stock_quantity,
+        image_url,
+        new_arrival,
+        id,
+      ],
     );
 
-    await client.query('COMMIT');
+    await client.query("COMMIT");
 
     const updatedProduct = productResult.rows[0];
     const updatedVariant = variantResult.rows[0] || {};
@@ -267,13 +279,12 @@ async function updateProduct(req, res) {
       variant_id: updatedVariant.id,
       price: updatedVariant.unit_price,
       stock_quantity: updatedVariant.stock_quantity,
-      image_url: updatedVariant.image_url
+      image_url: updatedVariant.image_url,
     });
-
   } catch (err) {
-    await client.query('ROLLBACK');
+    await client.query("ROLLBACK");
     console.error(err);
-    res.status(500).json({ error: 'Failed to update product and variant' });
+    res.status(500).json({ error: "Failed to update product and variant" });
   } finally {
     client.release();
   }
@@ -288,34 +299,34 @@ async function deleteProduct(req, res) {
 
   try {
     const resultV = await pool.query(
-      'DELETE FROM product_variants WHERE product_id = $1 RETURNING id',
-      [id]
+      "DELETE FROM product_variants WHERE product_id = $1 RETURNING id",
+      [id],
     );
 
     if (resultV.rows.length === 0) {
-      return res.status(404).json({ error: 'Product Variants not found' });
+      return res.status(404).json({ error: "Product Variants not found" });
     }
 
     const result = await pool.query(
-      'DELETE FROM products WHERE id = $1 RETURNING id',
-      [id]
+      "DELETE FROM products WHERE id = $1 RETURNING id",
+      [id],
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Product not found' });
+      return res.status(404).json({ error: "Product not found" });
     }
 
-    res.json({ message: 'Product deleted', id: result.rows[0].id });
+    res.json({ message: "Product deleted", id: result.rows[0].id });
   } catch (err) {
     console.error(err);
     // ON DELETE RESTRICT fires if product_image / product_variants /
     // order_items / cart_items still reference this product
-    if (err.code === '23503') {
+    if (err.code === "23503") {
       return res.status(409).json({
-        error: 'Cannot delete product: it is still referenced by other records',
+        error: "Cannot delete product: it is still referenced by other records",
       });
     }
-    res.status(500).json({ error: 'Failed to delete product' });
+    res.status(500).json({ error: "Failed to delete product" });
   }
 }
 
@@ -325,11 +336,11 @@ async function deleteProduct(req, res) {
 // =======================================================================
 async function getCategories(req, res) {
   try {
-    const result = await pool.query('SELECT * FROM categories ORDER BY id');
+    const result = await pool.query("SELECT * FROM categories ORDER BY id");
     res.json(result.rows);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to fetch categories' });
+    res.status(500).json({ error: "Failed to fetch categories" });
   }
 }
 
@@ -343,7 +354,7 @@ async function addCategory(req, res) {
 
   if (!categoryName || !slug) {
     return res.status(400).json({
-      error: 'categoryName and slug are required',
+      error: "categoryName and slug are required",
     });
   }
 
@@ -352,19 +363,20 @@ async function addCategory(req, res) {
       `INSERT INTO categories (category_name, slug)
        VALUES ($1, $2)
        RETURNING *`,
-      [categoryName, slug]
+      [categoryName, slug],
     );
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error(err);
-    if (err.code === '23505') {
-      return res.status(409).json({ error: 'A category with that slug already exists' });
+    if (err.code === "23505") {
+      return res
+        .status(409)
+        .json({ error: "A category with that slug already exists" });
     }
-    res.status(500).json({ error: 'Failed to add category' });
+    res.status(500).json({ error: "Failed to add category" });
   }
 }
-
 
 // =======================================================================
 // PUT /api/categories/:id
@@ -429,7 +441,6 @@ async function deleteCategory(req, res) {
   }
 }
 
-
 // =======================================================================
 // GET /api/products/:productId/variants
 // Get all variants for a specific product
@@ -475,47 +486,47 @@ WHERE p.id = $1`,
 
 
 // =======================================================================
-// GET /api/products/:productId/variants
+// GET /api/products/:product_id/variants
 // Get all variants for a specific product
 // =======================================================================
 async function getProductVariants(req, res) {
-  const { productId } = req.params;
+  const { product_id } = req.params;
 
   try {
     const result = await pool.query(
       `SELECT * FROM product_variants
         WHERE product_id = $1
         ORDER BY id`,
-      [productId]
+      [product_id],
     );
 
     res.json(result.rows);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to fetch product variants' });
+    res.status(500).json({ error: "Failed to fetch product variants" });
   }
 }
 
 // =======================================================================
 // POST /api/variants
 // Add a new product variant
-// Body: { productId, field, colour, size, unitPrice, stockQuantity, imageUrl, newArrival }
+// Body: { product_id, field, colour, size, unit_price, stock_quantity, image_url, new_arrival }
 // =======================================================================
 async function addProductVariants(req, res) {
   const {
-    productId,
+    product_id,
     field,
     colour,
     size,
-    unitPrice,
-    stockQuantity,
-    imageUrl,
-    newArrival,
+    unit_price,
+    stock_quantity,
+    image_url,
+    new_arrival,
   } = req.body;
 
-  if (!productId || unitPrice == null) {
+  if (!product_id || unit_price == null) {
     return res.status(400).json({
-      error: 'productId and unitPrice are required',
+      error: "product_id and unit_price are required",
     });
   }
 
@@ -526,31 +537,33 @@ async function addProductVariants(req, res) {
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
       [
-        productId,
+        product_id,
         field || null,
         colour || null,
         size || null,
-        unitPrice,
-        stockQuantity ?? 0,
-        imageUrl || null,
-        newArrival ?? false,
-      ]
+        unit_price,
+        stock_quantity ?? 0,
+        image_url || null,
+        new_arrival ?? false,
+      ],
     );
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error(err);
-    if (err.code === '23503') {
-      return res.status(409).json({ error: 'productId does not reference an existing product' });
+    if (err.code === "23503") {
+      return res
+        .status(409)
+        .json({ error: "product_id does not reference an existing product" });
     }
-    res.status(500).json({ error: 'Failed to add product variant' });
+    res.status(500).json({ error: "Failed to add product variant" });
   }
 }
 
 // =======================================================================
 // PUT /api/variants/:id
 // Update an existing product variant
-// Body: any of { field, colour, size, unitPrice, stockQuantity, imageUrl, newArrival }
+// Body: any of { field, colour, size, unit_price, stock_quantity, image_url, new_arrival }
 // =======================================================================
 async function updateProductVariants(req, res) {
   const { id } = req.params;
@@ -558,10 +571,10 @@ async function updateProductVariants(req, res) {
     field,
     colour,
     size,
-    unitPrice,
-    stockQuantity,
-    imageUrl,
-    newArrival,
+    unit_price,
+    stock_quantity,
+    image_url,
+    new_arrival,
   } = req.body;
 
   try {
@@ -577,17 +590,26 @@ async function updateProductVariants(req, res) {
               updated_at     = CURRENT_TIMESTAMP
         WHERE id = $8
       RETURNING *`,
-      [field, colour, size, unitPrice, stockQuantity, imageUrl, newArrival, id]
+      [
+        field,
+        colour,
+        size,
+        unit_price,
+        stock_quantity,
+        image_url,
+        new_arrival,
+        id,
+      ],
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Product variant not found' });
+      return res.status(404).json({ error: "Product variant not found" });
     }
 
     res.json(result.rows[0]);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to update product variant' });
+    res.status(500).json({ error: "Failed to update product variant" });
   }
 }
 
@@ -600,24 +622,24 @@ async function deleteProductVariants(req, res) {
 
   try {
     const result = await pool.query(
-      'DELETE FROM product_variants WHERE id = $1 RETURNING id',
-      [id]
+      "DELETE FROM product_variants WHERE id = $1 RETURNING id",
+      [id],
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Product variant not found' });
+      return res.status(404).json({ error: "Product variant not found" });
     }
 
-    res.json({ message: 'Product variant deleted', id: result.rows[0].id });
+    res.json({ message: "Product variant deleted", id: result.rows[0].id });
   } catch (err) {
     console.error(err);
     // FK constraint could fire if cart_items / order_items reference this variant
-    if (err.code === '23503') {
+    if (err.code === "23503") {
       return res.status(409).json({
-        error: 'Cannot delete variant: it is still referenced by other records',
+        error: "Cannot delete variant: it is still referenced by other records",
       });
     }
-    res.status(500).json({ error: 'Failed to delete product variant' });
+    res.status(500).json({ error: "Failed to delete product variant" });
   }
 }
 
