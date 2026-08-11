@@ -30,7 +30,7 @@ app.post('/api/orders',              orders.createOrder);
 app.get('/api/orders/user/:userId',  orders.getOrdersByUser);
 app.get('/api/orders/:orderId',      orders.getOrderById);
 app.put('/api/orders/:orderId',      orders.updateOrder);
-app.get('/api/orders/active',        orders.getActiveOrder);
+app.get('/api/ordersActive',        orders.getActiveOrder);
 
 
 // Product APIs
