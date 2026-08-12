@@ -213,27 +213,51 @@ async function deleteUser(req, res) {
 // =======================================================================
 // GET /api/users
 // Retrieve all users ordered by created_at DESC
+// Optionally filter by a single user: pass userID as a query param (?userID=x)
+//   or as a route param (:userID)
 // =======================================================================
 async function getUsers(req, res) {
+  const userID = req.params.userID ?? req.query.userID;
+
   try {
-    const result = await pool.query(
-      `SELECT id,
-              email,
-              role,
-              first_name,
-              last_name,
-              date_of_birth,
-              gender,
-              address,
-              marketing_opt_in,
-              account_status,
-              last_login_at,
-              customer_segment,
-              created_at,
-              updated_at
-         FROM users
-        ORDER BY created_at DESC`
-    );
+    const result = userID
+      ? await pool.query(
+          `SELECT id,
+                  email,
+                  role,
+                  first_name,
+                  last_name,
+                  date_of_birth,
+                  gender,
+                  address,
+                  marketing_opt_in,
+                  account_status,
+                  last_login_at,
+                  customer_segment,
+                  created_at,
+                  updated_at
+             FROM users
+            WHERE id = $1`,
+          [userID]
+        )
+      : await pool.query(
+          `SELECT id,
+                  email,
+                  role,
+                  first_name,
+                  last_name,
+                  date_of_birth,
+                  gender,
+                  address,
+                  marketing_opt_in,
+                  account_status,
+                  last_login_at,
+                  customer_segment,
+                  created_at,
+                  updated_at
+             FROM users
+            ORDER BY created_at DESC`
+        );
 
     res.json(result.rows);
   } catch (err) {
