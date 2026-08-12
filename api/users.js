@@ -242,6 +242,84 @@ async function getUsers(req, res) {
   }
 }
 
+// =======================================================================
+// PATCH /api/users/:id/status
+// Update only the account_status of a user
+// Body: { accountStatus: 'active' | 'inactive' | 'suspended' | 'banned' }
+// =======================================================================
+async function updateUserStatus(req, res) {
+  const { id } = req.params;
+  const { accountStatus } = req.body;
+
+  const validStatuses = ['active', 'inactive', 'suspended', 'banned'];
+  if (!accountStatus) {
+    return res.status(400).json({ error: 'accountStatus is required' });
+  }
+  if (!validStatuses.includes(accountStatus)) {
+    return res.status(400).json({
+      error: `accountStatus must be one of: ${validStatuses.join(', ')}`,
+    });
+  }
+
+  try {
+    const result = await pool.query(
+      `UPDATE users
+          SET account_status = $1,
+              updated_at     = CURRENT_TIMESTAMP
+        WHERE id = $2
+      RETURNING id, email, role, first_name, last_name, account_status, updated_at`,
+      [accountStatus, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update user status' });
+  }
+}
+
+// =======================================================================
+// PATCH /api/users/:id/password
+// Update only the password of a user by id
+// Body: { password }
+// =======================================================================
+async function updateUserPassword(req, res) {
+  const { id } = req.params;
+  const { password } = req.body;
+
+  if (!password) {
+    return res.status(400).json({ error: 'password is required' });
+  }
+  if (password.length < 6) {
+    return res.status(400).json({ error: 'password must be at least 6 characters' });
+  }
+
+  try {
+    const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+
+    const result = await pool.query(
+      `UPDATE users
+          SET password_hash = $1,
+              updated_at    = CURRENT_TIMESTAMP
+        WHERE id = $2
+      RETURNING id, email, role, first_name, last_name, updated_at`,
+      [passwordHash, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({ message: 'Password updated successfully', user: result.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update password' });
+  }
+}
 
 module.exports = {
   registerUser,
@@ -249,4 +327,6 @@ module.exports = {
   updateUser,
   deleteUser,
   getUsers,
+  updateUserStatus,
+  updateUserPassword,
 };

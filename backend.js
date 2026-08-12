@@ -17,6 +17,8 @@ app.post('/api/users/login', users.loginUser);
 app.put('/api/users/:id', users.updateUser);
 app.delete('/api/users/:id', users.deleteUser);
 app.get('/api/users', users.getUsers);
+app.patch('/api/users/:id/password', users.updateUserPassword);
+app.patch('/api/users/:id/status', users.updateUserStatus);
 
 // Cart APIs
 app.get('/api/cart/:userId', cart.getCart);
