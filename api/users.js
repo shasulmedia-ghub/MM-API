@@ -144,8 +144,8 @@ async function updateUser(req, res) {
 
     const result = await pool.query(
       `UPDATE users
-          SET first_name        = COALESCE($1, firstName),
-              last_name         = COALESCE($2, lastName),
+          SET first_name        = COALESCE($1, first_name),
+              last_name         = COALESCE($2, last_name),
               date_of_birth     = COALESCE($3, date_of_birth),
               gender            = COALESCE($4, gender),
               address           = COALESCE($5, address),
