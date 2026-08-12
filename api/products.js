@@ -136,6 +136,8 @@ async function addProduct(req, res) {
     field, // New
     new_arrival, // New
   } = req.body;
+  const explicitNewArrival =
+    new_arrival === true || new_arrival === "true" || new_arrival === 1;
 
   if (!category_id || !product_name) {
     return res.status(400).json({
@@ -172,7 +174,7 @@ async function addProduct(req, res) {
         unit_price ?? 0.0,
         stock_quantity ?? 15,
         image_url || default_image || null,
-        new_arrival ?? false,
+        explicitNewArrival,
       ],
     );
 
@@ -222,6 +224,10 @@ async function updateProduct(req, res) {
     variant_id
   } = req.body;
 
+  // 🛠️ 1. Convert to a strict boolean right after destructuring
+  const explicitNewArrival =
+    new_arrival === true || new_arrival === "true" || new_arrival === 1;
+
   const client = await pool.connect();
 
   try {
@@ -254,7 +260,7 @@ async function updateProduct(req, res) {
               unit_price     = COALESCE($4, unit_price),
               stock_quantity = COALESCE($5, stock_quantity),
               image_url      = COALESCE($6, image_url),
-              new_arrival    = COALESCE($7, new_arrival),
+              new_arrival    = $7,
               updated_at     = CURRENT_TIMESTAMP
         WHERE product_id = $8
         AND id = $9
@@ -266,7 +272,7 @@ async function updateProduct(req, res) {
         unit_price,
         stock_quantity,
         image_url,
-        new_arrival,
+        explicitNewArrival,
         id,
         variant_id,
       ],
