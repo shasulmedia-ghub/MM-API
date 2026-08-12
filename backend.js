@@ -16,6 +16,7 @@ app.post('/api/users/register', users.registerUser);
 app.post('/api/users/login', users.loginUser);
 app.put('/api/users/:id', users.updateUser);
 app.delete('/api/users/:id', users.deleteUser);
+app.get('/api/users', users.getUsers);
 
 // Cart APIs
 app.get('/api/cart/:userId', cart.getCart);

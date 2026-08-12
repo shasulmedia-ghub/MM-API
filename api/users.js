@@ -210,9 +210,43 @@ async function deleteUser(req, res) {
   }
 }
 
+// =======================================================================
+// GET /api/users
+// Retrieve all users ordered by created_at DESC
+// =======================================================================
+async function getUsers(req, res) {
+  try {
+    const result = await pool.query(
+      `SELECT id,
+              email,
+              role,
+              first_name,
+              last_name,
+              date_of_birth,
+              gender,
+              address,
+              marketing_opt_in,
+              account_status,
+              last_login_at,
+              customer_segment,
+              created_at,
+              updated_at
+         FROM users
+        ORDER BY created_at DESC`
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+}
+
+
 module.exports = {
   registerUser,
   loginUser,
   updateUser,
   deleteUser,
+  getUsers,
 };
