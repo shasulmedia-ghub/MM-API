@@ -219,6 +219,7 @@ async function updateProduct(req, res) {
     colour,
     field,
     new_arrival,
+    variant_id
   } = req.body;
 
   const client = await pool.connect();
@@ -256,6 +257,7 @@ async function updateProduct(req, res) {
               new_arrival    = COALESCE($7, new_arrival),
               updated_at     = CURRENT_TIMESTAMP
         WHERE product_id = $8
+        AND id = $9
       RETURNING *`,
       [
         field,
@@ -266,6 +268,7 @@ async function updateProduct(req, res) {
         image_url,
         new_arrival,
         id,
+        variant_id,
       ],
     );
 
