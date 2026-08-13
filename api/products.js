@@ -655,6 +655,61 @@ async function deleteProductVariants(req, res) {
   }
 }
 
+
+// =======================================================================
+// GET /api/products/variants
+// Get all products with product variants
+// =======================================================================
+async function getProductsWithVariants(req, res) {
+
+  try {
+    const productsResult = await pool.query(
+      `SELECT p.id,
+              p.product_name,
+              p.description,
+              p.image_url,
+              p.price,
+              p.category_id,
+              p.created_at,
+              p.updated_at
+         FROM products p
+        ORDER BY p.id DESC`
+    );
+
+    const products = productsResult.rows;
+
+    const productsWithVariants = await Promise.all(
+      products.map(async (product) => {
+        const itemsResult = await pool.query(
+          `SELECT v.id,
+                  v.product_id,
+                  v.field,
+                  v.colour,
+                  v.size,
+                  v.unit_price,
+                  v.stock_quantity,
+                  v.image_url,
+                  v.new_arrival
+             FROM product_variants v
+            WHERE v.product_id = $1
+            ORDER BY v.id DESC`,
+          [product.id]
+        );
+        return { ...product, variants: itemsResult.rows };
+      })
+    );
+
+    res.json(productsWithVariants);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch products for user' });
+  }
+}
+
+
+
+
+
 module.exports = {
   getProductList,
   getProductDetails,
@@ -671,4 +726,5 @@ module.exports = {
   addProductVariants,
   updateProductVariants,
   deleteProductVariants,
+  getProductsWithVariants,
 };
