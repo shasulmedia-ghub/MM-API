@@ -224,6 +224,9 @@ async function updateProduct(req, res) {
     variant_id
   } = req.body;
 
+  console.log("UPDATE PRODUCT - received default_image: ", default_image);
+
+
   // 🛠️ 1. Convert to a strict boolean right after destructuring
   const explicitNewArrival =
     new_arrival === true || new_arrival === "true" || new_arrival === 1;
