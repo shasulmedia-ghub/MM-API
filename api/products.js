@@ -667,12 +667,13 @@ async function getProductsWithVariants(req, res) {
       `SELECT p.id,
               p.product_name,
               p.description,
-              p.image_url,
-              p.price,
+              p.default_image,
               p.category_id,
+              c.category_name,
               p.created_at,
               p.updated_at
          FROM products p
+         JOIN categories c ON c.id = p.category_id
         ORDER BY p.id DESC`
     );
 
@@ -702,7 +703,7 @@ async function getProductsWithVariants(req, res) {
     res.json(productsWithVariants);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to fetch products for user' });
+    res.status(500).json({ error: 'Failed to fetch products with variants' });
   }
 }
 
