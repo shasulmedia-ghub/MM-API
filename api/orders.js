@@ -81,8 +81,8 @@ async function createOrder(req, res) {
     const orderItemsPromises = cartItems.map((item) =>
       client.query(
         `INSERT INTO order_items
-                (order_id, product_id, quantity, unit_price, colour, size)
-         VALUES ($1, $2, $3, $4, $5, $6)
+                (order_id, product_id, quantity, unit_price, colour, size, variant_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING *`,
         [
           order.id,
@@ -91,6 +91,7 @@ async function createOrder(req, res) {
           item.unit_price,
           item.colour,
           item.size,
+          item.variant_id,
         ]
       )
     );
