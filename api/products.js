@@ -27,8 +27,10 @@ LEFT JOIN (
     SELECT product_id, min(unit_price) as unit_price, 
     SUM(COALESCE(stock_quantity, 0)) AS stock_quantity
     FROM product_variants v
+    WHERE v.status = true
     GROUP BY product_id
 ) v ON v.product_id = p.id
+ WHERE p.status = true
 ORDER BY p.id;`
     );
 
@@ -103,7 +105,7 @@ async function getProductsByCategory(req, res) {
          FROM products p
          JOIN categories c ON c.id = p.category_id
          LEFT JOIN product_variants v ON v.product_id = p.id
-        WHERE p.category_id = $1
+        WHERE p.category_id = $1 AND p.status = true AND v.status = true
         ORDER BY p.id`,
       [category_id],
     );
@@ -671,7 +673,8 @@ async function getProductsWithVariants(req, res) {
               p.category_id,
               c.category_name,
               p.created_at,
-              p.updated_at
+              p.updated_at,
+              p.status
          FROM products p
          JOIN categories c ON c.id = p.category_id
         ORDER BY p.id DESC`
@@ -690,7 +693,8 @@ async function getProductsWithVariants(req, res) {
                   v.unit_price,
                   v.stock_quantity,
                   v.image_url,
-                  v.new_arrival
+                  v.new_arrival,
+                  v.status
              FROM product_variants v
             WHERE v.product_id = $1
             ORDER BY v.id DESC`,
@@ -706,9 +710,6 @@ async function getProductsWithVariants(req, res) {
     res.status(500).json({ error: 'Failed to fetch products with variants' });
   }
 }
-
-
-
 
 
 module.exports = {
