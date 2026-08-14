@@ -667,17 +667,23 @@ async function getProductsWithVariants(req, res) {
   try {
     const productsResult = await pool.query(
       `SELECT p.id,
-              p.product_name,
-              p.description,
-              p.default_image,
-              p.category_id,
-              c.category_name,
-              p.created_at,
-              p.updated_at,
-              p.status
-         FROM products p
-         JOIN categories c ON c.id = p.category_id
-        ORDER BY p.id DESC`
+       p.product_name,
+       p.description,
+       p.default_image,
+       p.category_id,
+       c.category_name,
+       p.created_at,
+       p.updated_at,
+       p.status,
+       CASE WHEN oi.product_id IS NOT NULL
+             OR ci.product_id IS NOT NULL
+            THEN TRUE ELSE FALSE
+       END AS is_in_use
+      FROM products p
+      JOIN categories c ON c.id = p.category_id
+      LEFT JOIN (SELECT DISTINCT product_id FROM order_items) oi ON oi.product_id = p.id
+      LEFT JOIN (SELECT DISTINCT product_id FROM cart_items)  ci ON ci.product_id = p.id
+       ORDER BY p.id DESC`
     );
 
     const products = productsResult.rows;
