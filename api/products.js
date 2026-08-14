@@ -582,36 +582,36 @@ async function addProductVariants(req, res) {
 async function updateProductVariants(req, res) {
   const { id } = req.params;
   const {
-    field,
     colour,
     size,
     unit_price,
     stock_quantity,
     image_url,
     new_arrival,
+    status
   } = req.body;
 
   try {
     const result = await pool.query(
       `UPDATE product_variants
-          SET field          = COALESCE($1, field),
-              colour         = COALESCE($2, colour),
-              size           = COALESCE($3, size),
-              unit_price     = COALESCE($4, unit_price),
-              stock_quantity = COALESCE($5, stock_quantity),
-              image_url      = COALESCE($6, image_url),
-              new_arrival    = COALESCE($7, new_arrival),
+          SET colour         = COALESCE($1, colour),
+              size           = COALESCE($2, size),
+              unit_price     = COALESCE($3, unit_price),
+              stock_quantity = COALESCE($4, stock_quantity),
+              image_url      = COALESCE($5, image_url),
+              new_arrival    = COALESCE($6, new_arrival),
+              status         = COALESCE($7, status),
               updated_at     = CURRENT_TIMESTAMP
         WHERE id = $8
       RETURNING *`,
       [
-        field,
         colour,
         size,
         unit_price,
         stock_quantity,
         image_url,
         new_arrival,
+        status,
         id,
       ],
     );
@@ -691,19 +691,25 @@ async function getProductsWithVariants(req, res) {
     const productsWithVariants = await Promise.all(
       products.map(async (product) => {
         const itemsResult = await pool.query(
-          `SELECT v.id,
-                  v.product_id,
-                  v.field,
-                  v.colour,
-                  v.size,
-                  v.unit_price,
-                  v.stock_quantity,
-                  v.image_url,
-                  v.new_arrival,
-                  v.status
-             FROM product_variants v
-            WHERE v.product_id = $1
-            ORDER BY v.id DESC`,
+        `SELECT v.id,
+          v.product_id,
+          v.field,
+          v.colour,
+          v.size,
+          v.unit_price,
+          v.stock_quantity,
+          v.image_url,
+          v.new_arrival,
+          v.status,
+          CASE WHEN oi.variant_id IS NOT NULL
+              OR ci.variant_id IS NOT NULL
+            THEN TRUE ELSE FALSE
+          END AS is_in_use
+        FROM product_variants v
+        LEFT JOIN (SELECT DISTINCT variant_id FROM order_items) oi ON oi.variant_id = v.id
+        LEFT JOIN (SELECT DISTINCT variant_id FROM cart_items)  ci ON ci.variant_id = v.id
+        WHERE v.product_id = $1
+        ORDER BY v.id DESC`,
           [product.id]
         );
         return { ...product, variants: itemsResult.rows };
@@ -718,6 +724,66 @@ async function getProductsWithVariants(req, res) {
 }
 
 
+// =======================================================================
+// PUT /api/products/:id
+// Update an existing product and its variant details
+// Body: any of { category_id, product_name, description, default_image, etc}
+// =======================================================================
+async function updateProductOnly(req, res) {
+  const { id } = req.params;
+  const {
+    category_id,
+    product_name,
+    description,
+    default_image,
+    status
+  } = req.body;
+
+  //console.log("UPDATE PRODUCT ONLY - received default_image: ", default_image);
+
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    // 1. Update products table
+    const productResult = await client.query(
+      `UPDATE products
+          SET category_id   = COALESCE($1, category_id),
+              product_name  = COALESCE($2, product_name),
+              description   = COALESCE($3, description),
+              default_image = COALESCE($4, default_image),
+              status        = COALESCE($5, status),
+              updated_at    = CURRENT_TIMESTAMP
+        WHERE id = $6
+      RETURNING *`,
+      [category_id, product_name, description, default_image, status, id],
+    );
+
+    if (productResult.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    await client.query("COMMIT");
+
+    const updatedProduct = productResult.rows[0];
+    
+    res.json({
+      ...updatedProduct,
+    });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error(err);
+    res.status(500).json({ error: "Failed to update product only" });
+  } finally {
+    client.release();
+  }
+}
+
+
+
 module.exports = {
   getProductList,
   getProductDetails,
@@ -725,6 +791,7 @@ module.exports = {
   getProductsByCategory,
   addProduct,
   updateProduct,
+  updateProductOnly,
   deleteProduct,
   getCategories,
   addCategory,
