@@ -124,6 +124,7 @@ async function getProductsByCategory(req, res) {
 // Add a new product and its initial variant (price, stock, etc.)
 // Body: { category_id, product_name, description, default_image, etc }
 // =======================================================================
+
 async function addProduct(req, res) {
   const {
     category_id,
@@ -782,6 +783,26 @@ async function updateProductOnly(req, res) {
   }
 }
 
+async function addProductOnly(req, res) {
+    const {
+    category_id,
+    product_name,
+    description,
+    default_image
+  } = req.body;
+  try {
+    const result = await pool.query(
+      `INSERT INTO products (category_id, product_name, description, default_image, status)
+       VALUES ($1, $2, $3, $4, true)
+       RETURNING *`,
+      [category_id, product_name, description, default_image],
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to add product" });
+  }
+}
 
 
 module.exports = {
@@ -802,4 +823,5 @@ module.exports = {
   updateProductVariants,
   deleteProductVariants,
   getProductsWithVariants,
+  addProductOnly
 };
