@@ -44,7 +44,8 @@ async function createOrder(req, res) {
               ci.quantity,
               ci.unit_price,
               ci.colour,
-              ci.size
+              ci.size,
+              ci.variant_id
          FROM cart_items ci
          JOIN carts c ON c.id = ci.cart_id
         WHERE ci.id = ANY($1::int[])
