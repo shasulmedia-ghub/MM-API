@@ -97,6 +97,18 @@ async function createOrder(req, res) {
       )
     );
 
+    // Update stock quantity for each variant
+    for (const item of cartItems) {
+      if (item.variant_id) {
+        await client.query(
+          `UPDATE product_variants
+           SET stock_quantity = stock_quantity - $1
+           WHERE id = $2`,
+          [item.quantity, item.variant_id]
+        );
+      }
+    }
+
     const orderItemsResults = await Promise.all(orderItemsPromises);
     const orderItems = orderItemsResults.map((r) => r.rows[0]);
 
